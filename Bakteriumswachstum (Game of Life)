@@ -1,0 +1,69 @@
+# Projekt, das ich mit Hilfe von ChatGPT erstellt habe.
+
+import os
+import time 
+import random
+
+N = 20 # Größe des Gitters
+movement_prob = 0.1 # Wahrscheinlichkeit einer Bewegung
+spawn_prob = 0.3 # Wahrscheinlichkeit der Entstehung neuer Zellen
+
+# Funktion zum Erstellen der Welt
+def create_world():
+    # Erstelle ein 2D-Array, das die Welt repräsentiert, mit zufällig platzierten Zellen basierend auf spawn_prob
+    return [[random.choice([0, 1]) if random.random() < spawn_prob else 0 for _ in range(N)] for _ in range(N)]
+
+# Funktion zum Anzeigen der Welt
+def display_world(world):
+    # Bildschirm leeren, um die Darstellung der nächsten Generation zu aktualisieren
+    os.system("cls" if os.name == "nt" else "clear")
+
+    # Die Welt anzeigen, wobei lebende Zellen als "#" und tote Zellen als "." dargestellt werden
+    for row in world:
+        print(" ".join(["#" if cell else "." for cell in row]))
+    print()
+
+# Funktion zur Berechnung der nächsten Generation basierend auf den Regeln von Conway's Game of Life
+def next_generation(world):
+    new_world = [[0]*N for _ in range(N)] # Erstelle eine neue leere Welt
+
+    # Iteriere über jedes Zellenpaar im Gitter
+    for i in range(N):
+        for j in range(N):
+            # Berechne die Summe der Nachbarzellen für die aktuelle Zelle
+            bacteria_sum = sum(world[(i+x)%N][(j+y)%N] for x in range(-1,2) for y in range(-1,2) if (x != 0 or y != 0))
+
+            # Regeln für das Leben und den Tod der Zelle gemäß Conways Game of Life
+            if world[i][j] == 1: # Wenn die Zelle lebendig ist
+                if bacteria_sum < 2 or bacteria_sum > 3: # Stirbt bei Unter- oder Überbevölkerung
+                    new_world[i][j] = 0
+                else: # Überlebt bis zur nächsten Generation
+                    new_world[i][j] = world[i][j]
+            else: # Wenn die Zelle tot ist
+                if bacteria_sum == 3: # Wird wiederbelebt, wenn genau 3 Nachbarzellen lebendig sind
+                    new_world[i][j] = 1
+
+    # Bewegung der Bakterien mit einer bestimmten Wahrscheinlichkeit
+    for i in range(N):
+        for j in range(N):
+            if world[i][j] == 1 and random.random() < movement_prob:
+                # Berechne die neue Position basierend auf einer zufälligen Bewegungsrichtung
+                new_i = (i + random.choice([-1,0,1])) % N
+                new_j = (j + random.choice([-1,0,1])) % N
+                # Bewege das Bakterium an die neue Position, wenn sie leer ist
+                if new_world[new_i][new_j] == 0:
+                    new_world[new_i][new_j] = 1
+
+    # Rückgabe der aktualisierten Welt
+    return new_world
+
+# Hauptfunktion zum Aus
+def main():
+    world = create_world()
+    while True:
+        world = next_generation(world)
+        display_world(world)
+        time.sleep(0.3)
+
+if __name__ == "__main__":
+    main()
